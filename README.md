@@ -8,10 +8,9 @@ perfect for offensive AD tooling.
 
 This is a bunch of pentesting utilities on top of that. Everything runs inside
 a signed `.swbn` that Chrome installs, and speaks SMB / LDAP / DCE-RPC / WinRM
-/ Kerberos / MSSQL / ADWS from a browser tab. No dropper on the target's
-network, no `pip install`, no Python — just a webapp you open.
+/ Kerberos / MSSQL / ADWS from a browser tab.
 
-Written for [OffZone 2026](https://offzone.moscow/) — talk *"Living off the
+Written for [OFFZONE 2026](https://offzone.moscow/) — talk *"Living off the
 Browser"*.
 
 > Use only against systems you own or have explicit written permission to test.
