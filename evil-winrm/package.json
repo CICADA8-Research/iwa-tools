@@ -1,0 +1,20 @@
+{
+  "name": "evil-winrm-iwa",
+  "version": "1.0.0",
+  "description": "An Isolated Web App that opens a WinRM (WS-Management) shell to a Windows host over the Direct Sockets API — a minimalist browser port of Evil-WinRM.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "keygen": "node scripts/gen-key.js",
+    "assets": "node scripts/gen-assets.js",
+    "prebuild": "node scripts/gen-assets.js",
+    "build": "rollup -c",
+    "test": "node scripts/test.js",
+    "id": "node scripts/print-id.js"
+  },
+  "devDependencies": {
+    "rollup": "^3.29.5",
+    "rollup-plugin-webbundle": "0.2.0",
+    "wbn-sign": "0.3.1"
+  }
+}

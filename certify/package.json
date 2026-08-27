@@ -1,0 +1,19 @@
+{
+  "name": "certify-iwa",
+  "version": "1.0.0",
+  "description": "An Isolated Web App that enumerates AD CS and finds certificate-template misconfigurations (ESC1-ESC15) over LDAP via the Direct Sockets API — a browser port of GhostPack/Certify.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "keygen": "node scripts/gen-key.js",
+    "assets": "node scripts/gen-assets.js",
+    "prebuild": "node scripts/gen-assets.js",
+    "build": "rollup -c",
+    "id": "node scripts/print-id.js"
+  },
+  "devDependencies": {
+    "rollup": "^3.29.5",
+    "rollup-plugin-webbundle": "0.2.0",
+    "wbn-sign": "0.3.1"
+  }
+}

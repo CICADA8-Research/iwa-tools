@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="/.well-known/manifest.webmanifest">
+  <title>Evil-WinRM (IWA)</title>
+  <style>
+    :root { color-scheme: dark; --bg:#160d0d; --panel:#211414; --line:#43292a; --fg:#f0dede; --muted:#c79a9a; --accent:#991b1b; --ok:#34d399; --warn:#fbbf24; --err:#f87171; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:14px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+    header { padding:14px 20px; background:#991b1b; }
+    header h1 { margin:0; font-size:18px; }
+    header p { margin:4px 0 0; font-size:12px; color:#f6d9d9; }
+    main { display:grid; grid-template-columns:320px 1fr; gap:16px; padding:16px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; }
+    label { display:block; font-size:12px; color:var(--muted); margin:10px 0 3px; }
+    input[type=text], input[type=password], input[type=number] { width:100%; padding:8px; border-radius:6px; border:1px solid var(--line); background:#0f0808; color:var(--fg); }
+    .actions { display:flex; gap:8px; margin-top:16px; }
+    button { flex:1; padding:9px; border:0; border-radius:6px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+    button.secondary { background:#3a2a2a; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .status { margin-top:12px; font-size:12px; color:var(--muted); }
+    h2 { font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:0 0 10px; }
+    #term { background:#0b0606; border:1px solid var(--line); border-radius:8px; padding:12px; height:62vh; overflow:auto; font-family:ui-monospace, monospace; font-size:13px; white-space:pre-wrap; word-break:break-word; }
+    #term .err { color:var(--err); } #term .ok { color:var(--ok); } #term .cmd { color:#fca5a5; }
+    .prompt { display:flex; gap:8px; align-items:center; margin-top:10px; }
+    .prompt span { color:var(--accent); font-family:ui-monospace, monospace; font-weight:700; }
+    .bar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px; }
+    .mini { flex:0 0 auto; padding:5px 10px; font-size:12px; font-weight:600; background:#3a2a2a; }
+    .hint { font-size:11px; color:var(--muted); margin-left:auto; }
+    #cmd { flex:1; padding:9px; border-radius:6px; border:1px solid var(--line); background:#0f0808; color:var(--fg); font-family:ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Evil-WinRM <span style="opacity:.6">· Isolated Web App</span></h1>
+    <p>WinRM (WS-Management) shell over HTTP/5985 via Direct Sockets, NTLM-encrypted. For authorised security testing only.</p>
+  </header>
+  <main>
+    <section class="panel" id="form">
+      <h2>Target</h2>
+      <label>Host / IP</label>
+      <input id="host" type="text" placeholder="dc01.corp.local" autocomplete="off">
+      <label>WinRM port</label>
+      <input id="port" type="number" value="5985">
+      <div class="check"><input id="tls" type="checkbox"><label style="margin:0">Use TLS (HTTPS/5986) — WASM rustls + channel binding</label></div>
+      <h2 style="margin-top:16px">Credentials</h2>
+      <label>Authentication</label>
+      <select id="auth">
+        <option value="ntlm">NTLMv2 (Negotiate)</option>
+        <option value="kerberos">Kerberos (Negotiate)</option>
+      </select>
+      <label>Username (user / user@domain / DOMAIN\user)</label>
+      <input id="user" type="text" placeholder="administrator" autocomplete="off">
+      <label>Domain / realm (optional)</label>
+      <input id="domain" type="text" placeholder="corp.local" autocomplete="off">
+      <label id="kdc-row">KDC (optional — defaults to the host above; Kerberos needs the FQDN)</label>
+      <input id="kdc" type="text" placeholder="dc01.corp.local" autocomplete="off">
+      <label>Password</label>
+      <input id="password" type="password" autocomplete="off">
+      <label>…or NTLM hash (Pass-the-Hash / Kerberos RC4)</label>
+      <input id="hash" type="text" placeholder="NThash (32 hex) or LM:NT" autocomplete="off">
+      <div class="actions">
+        <button id="btn-conn">Connect</button>
+        <button id="btn-disc" class="secondary" disabled>Disconnect</button>
+      </div>
+      <div class="status" id="status">Initialising…</div>
+    </section>
+
+    <section class="panel" id="shell">
+      <h2>Shell</h2>
+      <div class="bar">
+        <button id="btn-upload" class="mini" disabled>Upload…</button>
+        <button id="btn-loadps" class="mini" disabled>Load .ps1…</button>
+        <button id="btn-invoke" class="mini" disabled>Invoke .NET…</button>
+        <span class="hint">download &lt;path&gt; · Ctrl+C interrupts · ↑/↓ history</span>
+      </div>
+      <input id="file-upload" type="file" hidden>
+      <input id="file-ps" type="file" accept=".ps1,text/plain" hidden>
+      <input id="file-bin" type="file" accept=".exe,.dll" hidden>
+      <div id="term"></div>
+      <div class="prompt"><span id="ps">PS&gt;</span><input id="cmd" type="text" placeholder="connect to run commands…" autocomplete="off" disabled></div>
+    </section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

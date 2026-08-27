@@ -1,0 +1,23 @@
+{
+  "name": "netexec-iwa",
+  "version": "1.0.0",
+  "description": "An Isolated Web App: NetExec-style multi-protocol AD post-exploitation tool over Direct Sockets.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "keygen": "node scripts/gen-key.js",
+    "assets": "node scripts/gen-assets.js",
+    "prebuild": "node scripts/gen-assets.js",
+    "build": "rollup -c",
+    "test": "node scripts/test.js",
+    "id": "node scripts/print-id.js"
+  },
+  "devDependencies": {
+    "rollup": "^3.29.5",
+    "rollup-plugin-webbundle": "0.2.0",
+    "wbn-sign": "0.3.1"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0"
+  }
+}

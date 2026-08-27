@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="/.well-known/manifest.webmanifest">
+  <title>certighost</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0a0f1a; --line:#26344f; --fg:#dbe6f5; --muted:#8aa0c2; --ok:#34d399; --err:#f87171; --warn:#fbbf24; --cmd:#7cc4ff; }
+    * { box-sizing: border-box; }
+    html, body { height:100%; margin:0; }
+    body { display:flex; flex-direction:column; font:13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background:var(--bg); color:var(--fg); }
+    header { padding:10px 16px; background:#0d1b33; border-bottom:1px solid var(--line); }
+    header b { font-size:14px; } header span { color:var(--muted); font-size:12px; }
+    #term { flex:1; overflow:auto; padding:12px 16px; white-space:pre-wrap; }
+    #term .ok { color:var(--ok); } #term .err { color:var(--err); } #term .warn { color:var(--warn); } #term .cmd { color:var(--cmd); } #term .muted { color:var(--muted); }
+    .promptline { display:flex; gap:8px; align-items:center; padding:10px 16px; border-top:1px solid var(--line); background:#0d1424; }
+    #ps { color:var(--ok); white-space:nowrap; }
+    #cmd { flex:1; background:transparent; border:0; outline:0; color:var(--fg); font:inherit; }
+  </style>
+</head>
+<body>
+  <header><b>certighost</b> <span>· CVE-2026-54121 cdc-redirect chain · authorised testing only</span></header>
+  <div id="term"></div>
+  <div class="promptline"><span id="ps">ghost#</span><input id="cmd" type="text" autocomplete="off" spellcheck="false" autofocus></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

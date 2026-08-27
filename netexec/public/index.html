@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetExec — IWA</title>
+<style>
+  :root {
+    --bg: #0a0a0e; --panel: #111116; --line: #1e1e24; --ink: #e4e4e8;
+    --dim: #6c6c78; --acc: #00ffd8; --err: #ff5f5f; --warn: #ffb84d;
+    --ok: #4dff91; --smb: #ff6b9d; --ldap: #6baaff; --winrm: #ffb84d;
+    --mssql: #ff8c42; --ftp: #b88cff; --rdp: #42d4f4; --vnc: #78d97e;
+    --mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0 }
+  body { background: var(--bg); color: var(--ink); font-family: var(--mono); font-size: 13px; line-height: 1.5; height: 100vh; display: flex; flex-direction: column; overflow: hidden }
+
+  .titlebar { background: var(--panel); border-bottom: 1px solid var(--line); padding: 6px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0 }
+  .titlebar h1 { font-size: 13px; font-weight: 700; color: var(--acc) }
+  .titlebar .ver { color: var(--dim); font-size: 11px }
+  .titlebar .sep { color: var(--line) }
+  .titlebar .stat { font-size: 11px; color: var(--dim) }
+  .titlebar .stat .val { color: var(--acc) }
+
+  .terminal { flex: 1; overflow-y: auto; padding: 8px 12px; scroll-behavior: smooth }
+  .terminal::-webkit-scrollbar { width: 6px }
+  .terminal::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px }
+  .terminal::-webkit-scrollbar-track { background: transparent }
+
+  .line { white-space: pre-wrap; word-break: break-all; padding: 0; min-height: 1.5em }
+  .line.info { color: var(--dim) }
+  .line.ok { color: var(--ok) }
+  .line.err { color: var(--err) }
+  .line.warn { color: var(--warn) }
+  .line.banner { color: var(--acc) }
+  .line.help { color: var(--ink) }
+  .line .host { color: var(--ink); font-weight: 700 }
+  .line .proto { padding: 0 4px; border-radius: 2px; font-size: 10px; font-weight: 700; margin-right: 6px; display: inline-block; min-width: 40px; text-align: center }
+  .line .proto.smb { background: var(--smb); color: #000 }
+  .line .proto.ldap { background: var(--ldap); color: #000 }
+  .line .proto.winrm { background: var(--winrm); color: #000 }
+  .line .proto.mssql { background: var(--mssql); color: #000 }
+  .line .proto.ftp { background: var(--ftp); color: #000 }
+  .line .proto.rdp { background: var(--rdp); color: #000 }
+  .line .proto.vnc { background: var(--vnc); color: #000 }
+
+  .prompt-area { background: var(--panel); border-top: 1px solid var(--line); padding: 8px 12px; flex-shrink: 0; display: flex; align-items: center; gap: 8px }
+  .prompt-area .ps1 { color: var(--acc); font-weight: 700; flex-shrink: 0; white-space: nowrap }
+  .prompt-area input { background: transparent; border: none; color: var(--ink); font-family: var(--mono); font-size: 13px; flex: 1; outline: none; caret-color: var(--acc) }
+  .prompt-area .status { color: var(--dim); font-size: 11px; flex-shrink: 0 }
+  .prompt-area .status.running { color: var(--warn) }
+
+  .hint { position: absolute; bottom: 42px; left: 12px; right: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; max-height: 200px; overflow-y: auto; display: none; z-index: 10 }
+  .hint.visible { display: block }
+  .hint-item { padding: 4px 10px; cursor: pointer; font-size: 12px; color: var(--dim) }
+  .hint-item:hover, .hint-item.selected { background: var(--line); color: var(--ink) }
+  .hint-item .cmd { color: var(--acc); margin-right: 12px }
+</style>
+</head>
+<body>
+<div class="titlebar">
+  <h1>&gt;_ nxc</h1>
+  <span class="sep">|</span>
+  <span class="ver">IWA Edition · Direct Sockets</span>
+  <span class="sep">|</span>
+  <span class="stat">targets: <span class="val" id="st-targets">0</span></span>
+  <span class="stat">ok: <span class="val" id="st-ok">0</span></span>
+  <span class="stat">fail: <span class="val" id="st-fail">0</span></span>
+</div>
+<div class="terminal" id="terminal"></div>
+<div class="hint" id="hint"></div>
+<div class="prompt-area">
+  <span class="ps1" id="ps1">nxc &gt;</span>
+  <input id="input" autofocus spellcheck="false" autocomplete="off" placeholder="type 'help' for commands">
+  <span class="status" id="status">idle</span>
+</div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

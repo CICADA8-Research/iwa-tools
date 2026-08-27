@@ -1,0 +1,20 @@
+{
+  "name": "portscan-iwa",
+  "version": "1.0.0",
+  "description": "An Isolated Web App: a TCP connect port scanner (nmap-style targets) over the Direct Sockets API.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "keygen": "node scripts/gen-key.js",
+    "assets": "node scripts/gen-assets.js",
+    "prebuild": "node scripts/gen-assets.js",
+    "build": "rollup -c",
+    "test": "node scripts/test.js",
+    "id": "node scripts/print-id.js"
+  },
+  "devDependencies": {
+    "rollup": "^3.29.5",
+    "rollup-plugin-webbundle": "0.2.0",
+    "wbn-sign": "0.3.1"
+  }
+}

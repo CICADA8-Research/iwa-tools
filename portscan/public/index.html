@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="/.well-known/manifest.webmanifest">
+  <title>Port Scanner (IWA)</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0e1726; --panel:#16223a; --line:#26344f; --fg:#dbe6f5; --muted:#8aa0c2; --accent:#3b82f6; --ok:#34d399; --warn:#fbbf24; --err:#f87171; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:14px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+    header { padding:16px 20px; background:#124a8c; }
+    header h1 { margin:0; font-size:18px; } header p { margin:4px 0 0; font-size:12px; color:#cfe0f7; }
+    main { display:grid; grid-template-columns:320px 1fr; gap:16px; padding:16px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; }
+    label { display:block; font-size:12px; color:var(--muted); margin:10px 0 3px; }
+    input, textarea { width:100%; padding:8px; border-radius:6px; border:1px solid var(--line); background:#0c1322; color:var(--fg); font-family:inherit; }
+    textarea { resize:vertical; min-height:64px; font-family:ui-monospace, monospace; }
+    .row { display:flex; gap:8px; } .row > * { flex:1; }
+    .actions { display:flex; gap:8px; margin-top:16px; }
+    button { flex:1; padding:9px; border:0; border-radius:6px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+    button.secondary { background:#33415c; } button:disabled { opacity:.5; cursor:not-allowed; }
+    .status { margin-top:12px; font-size:12px; color:var(--muted); }
+    h2 { font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:0 0 10px; }
+    .bar { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:8px; }
+    #results { font-family:ui-monospace, monospace; font-size:13px; max-height:50vh; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:8px; }
+    #results .hit { color:var(--ok); }
+    #log { background:#0a1020; border:1px solid var(--line); border-radius:8px; padding:10px; height:120px; overflow:auto; font-family:ui-monospace, monospace; font-size:12px; white-space:pre-wrap; margin-top:12px; }
+    #log .err { color:var(--err); } #log .ok { color:var(--ok); } #log .warn { color:var(--warn); }
+    .warn-box { background:#3a2a0c; border:1px solid #6b4e16; color:#f4d089; padding:8px 10px; border-radius:8px; font-size:12px; margin-top:12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Port Scanner <span style="opacity:.6">· Isolated Web App</span></h1>
+    <p>TCP connect scanner over the Direct Sockets API. For authorised testing only.</p>
+  </header>
+  <main>
+    <section class="panel">
+      <h2>Targets</h2>
+      <label>Hosts (IP / CIDR / ranges — space or comma separated)</label>
+      <textarea id="targets" placeholder="10.0.0.0/24  192.168.1.1-50  10.0.1-2.10"></textarea>
+      <label>Ports (blank = common set)</label>
+      <input id="ports" type="text" placeholder="22,80,443,3389  or  1-1024">
+      <div class="row">
+        <div><label>Timeout (ms)</label><input id="timeout" type="number" value="1500"></div>
+        <div><label>Concurrency</label><input id="concurrency" type="number" value="100"></div>
+      </div>
+      <div class="actions">
+        <button id="btn-scan">Scan</button>
+        <button id="btn-stop" class="secondary" disabled>Stop</button>
+      </div>
+      <div class="status" id="status">Idle.</div>
+      <div class="warn-box">A TCP connect scan is noisy and easy to detect. Filtered hosts cost a full timeout each — keep ranges and the timeout sensible.</div>
+    </section>
+
+    <section class="panel">
+      <h2>Open ports</h2>
+      <div class="bar"><span id="progress"></span><span id="count"></span></div>
+      <div id="results"></div>
+      <div class="actions" style="margin-top:10px">
+        <button id="btn-csv" class="secondary" disabled>Export CSV</button>
+        <button id="btn-clear" class="secondary">Clear</button>
+      </div>
+      <div id="log"></div>
+    </section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

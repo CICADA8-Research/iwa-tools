@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="/.well-known/manifest.webmanifest">
+  <title>SharpHound (IWA)</title>
+  <style>
+    :root { color-scheme: dark; --bg:#120f1a; --panel:#1b1626; --line:#352b48; --fg:#e9e2f5; --muted:#a895c4; --accent:#6d289d; --ok:#34d399; --warn:#fbbf24; --err:#f87171; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:14px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+    header { padding:16px 20px; background:#6d289d; }
+    header h1 { margin:0; font-size:18px; }
+    header p { margin:4px 0 0; font-size:12px; color:#ecdcfb; }
+    main { display:grid; grid-template-columns:360px 1fr; gap:16px; padding:16px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; }
+    label { display:block; font-size:12px; color:var(--muted); margin:10px 0 3px; }
+    input[type=text], input[type=password], input[type=number], select { width:100%; padding:8px; border-radius:6px; border:1px solid var(--line); background:#0f0b17; color:var(--fg); }
+    .row { display:flex; gap:8px; }
+    .row > * { flex:1; }
+    .actions { display:flex; gap:8px; margin-top:16px; }
+    button { flex:1; padding:9px; border:0; border-radius:6px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+    button.secondary { background:#3a3050; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .status { margin-top:12px; font-size:12px; color:var(--muted); }
+    h2 { font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:0 0 10px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--muted); position:sticky; top:0; background:var(--panel); }
+    td.type { font-weight:600; color:var(--ok); white-space:nowrap; }
+    td.val { font-family:ui-monospace, monospace; word-break:break-all; }
+    .tablewrap { max-height:46vh; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+    #log { background:#0b0812; border:1px solid var(--line); border-radius:8px; padding:10px; height:150px; overflow:auto; font-family:ui-monospace, monospace; font-size:12px; white-space:pre-wrap; margin-top:12px; }
+    .log-err { color:var(--err); } .log-ok { color:var(--ok); }
+    .summary { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+    .chip { background:#0f0b17; border:1px solid var(--line); border-radius:6px; padding:3px 8px; font-size:12px; }
+    .count { font-size:12px; color:var(--muted); margin:10px 0; }
+    .downloads { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+    .hide { display:none; }
+    .presets { display:flex; flex-wrap:wrap; gap:4px; margin:6px 0 8px; }
+    .preset { flex:0 0 auto; padding:4px 10px; border:1px solid var(--line); border-radius:4px; background:transparent; color:var(--fg); font-size:12px; cursor:pointer; font-weight:400; }
+    .preset.active { background:var(--accent); border-color:var(--accent); font-weight:600; }
+    .methods-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px 10px; margin:4px 0 8px; }
+    .methods-grid label { font-size:12px; color:var(--fg); margin:0; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 0; }
+    .methods-grid label input { margin:0; }
+    .method-hdr { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; padding:4px 0 1px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SharpHound <span style="opacity:.6">· Isolated Web App</span></h1>
+    <p>BloodHound data collector for Active Directory (Direct Sockets API). Supports all SharpHound collection methods. For authorised security testing only.</p>
+  </header>
+  <main>
+    <section class="panel" id="form">
+      <h2>Target</h2>
+      <label>Domain Controller (host / IP)</label>
+      <input id="host" type="text" placeholder="dc01.corp.local" autocomplete="off">
+      <label>LDAP port</label>
+      <input id="port" type="number" value="389">
+      <div class="check"><input id="tls" type="checkbox"><label style="margin:0">Use TLS (LDAPS) — WASM rustls + channel binding</label></div>
+
+      <h2 style="margin-top:16px">Credentials</h2>
+      <label>Authentication</label>
+      <select id="auth">
+        <option value="ntlm">NTLMv2 (GSS-SPNEGO)</option>
+        <option value="kerberos">Kerberos (GSS-SPNEGO)</option>
+        <option value="simple">Simple bind (cleartext)</option>
+      </select>
+      <label>Username (user@domain or DOMAIN\user)</label>
+      <input id="bind" type="text" placeholder="user@corp.local" autocomplete="off">
+      <label id="domain-row">Domain / realm (optional — overrides parsed)</label>
+      <input id="domain" type="text" placeholder="corp.local" autocomplete="off">
+      <label id="kdc-row">KDC (optional — defaults to the DC host above)</label>
+      <input id="kdc" type="text" placeholder="dc01.corp.local" autocomplete="off">
+      <label>Password</label>
+      <input id="password" type="password" autocomplete="off">
+
+      <h2 style="margin-top:16px">Collection</h2>
+      <label>Mode</label>
+      <select id="mode">
+        <option value="collect">BloodHound Collection</option>
+        <option value="buildcache">Build Cache (SID/DN/type)</option>
+        <option value="query">Custom LDAP Query</option>
+      </select>
+
+      <div id="collect-opts">
+        <label>Collection Methods (-c)</label>
+        <div class="presets">
+          <button type="button" class="preset active" data-preset="default">Default</button>
+          <button type="button" class="preset" data-preset="all">All</button>
+          <button type="button" class="preset" data-preset="dconly">DCOnly</button>
+          <button type="button" class="preset" data-preset="computeronly">ComputerOnly</button>
+        </div>
+        <div class="method-hdr">LDAP-based</div>
+        <div class="methods-grid">
+          <label><input type="checkbox" data-method="Group" checked> Group</label>
+          <label><input type="checkbox" data-method="Trusts" checked> Trusts</label>
+          <label><input type="checkbox" data-method="ACL" checked> ACL</label>
+          <label><input type="checkbox" data-method="ObjectProps" checked> ObjectProps</label>
+          <label><input type="checkbox" data-method="Container" checked> Container</label>
+          <label><input type="checkbox" data-method="SPNTargets" checked> SPNTargets</label>
+          <label><input type="checkbox" data-method="CertServices"> CertServices</label>
+        </div>
+        <div class="method-hdr">Host-based (SMB/RPC)</div>
+        <div class="methods-grid">
+          <label><input type="checkbox" data-method="LocalAdmin" checked> LocalAdmin</label>
+          <label><input type="checkbox" data-method="Session" checked> Session</label>
+          <label><input type="checkbox" data-method="RDP" checked> RDP</label>
+          <label><input type="checkbox" data-method="DCOM" checked> DCOM</label>
+          <label><input type="checkbox" data-method="PSRemote" checked> PSRemote</label>
+          <label><input type="checkbox" data-method="LoggedOn"> LoggedOn</label>
+          <label><input type="checkbox" data-method="GPOLocalGroup"> GPOLocalGroup</label>
+        </div>
+        <div style="margin-top:6px">
+          <label style="margin:4px 0"><input id="stealth" type="checkbox"> Stealth (single-source, avoid noisy host enum)</label>
+          <label style="margin:4px 0"><input id="exclude-dcs" type="checkbox"> Exclude Domain Controllers from host enum</label>
+        </div>
+      </div>
+
+      <label>Base / Search Base DN (optional — auto from RootDSE)</label>
+      <input id="basedn" type="text" placeholder="DC=corp,DC=local" autocomplete="off">
+      <div id="query-opts" class="hide">
+        <label>LDAP filter</label>
+        <input id="filter" type="text" value="(objectClass=*)" autocomplete="off">
+        <label>Attributes (comma-separated)</label>
+        <input id="attributes" type="text" value="distinguishedName,objectClass,sAMAccountName,objectSid" autocomplete="off">
+      </div>
+
+      <div class="actions">
+        <button id="btn-run">Run</button>
+        <button id="btn-clear" class="secondary">Clear</button>
+      </div>
+      <div class="status" id="status">Initialising…</div>
+    </section>
+
+    <section class="panel" id="results">
+      <h2>Results</h2>
+      <div class="summary" id="summary"></div>
+      <div class="downloads" id="downloads"></div>
+      <div class="count" id="count"></div>
+      <div class="tablewrap"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
+      <div id="log"></div>
+    </section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="/.well-known/manifest.webmanifest">
+  <title>SOAPHound (IWA)</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0c1514; --panel:#10201e; --line:#21413c; --fg:#daf0ec; --muted:#84b3ab; --accent:#0f766c; --ok:#34d399; --warn:#fbbf24; --err:#f87171; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:14px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+    header { padding:16px 20px; background:#0f766c; }
+    header h1 { margin:0; font-size:18px; }
+    header p { margin:4px 0 0; font-size:12px; color:#d4f3ee; }
+    main { display:grid; grid-template-columns:360px 1fr; gap:16px; padding:16px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; }
+    label { display:block; font-size:12px; color:var(--muted); margin:10px 0 3px; }
+    input[type=text], input[type=password], input[type=number], select { width:100%; padding:8px; border-radius:6px; border:1px solid var(--line); background:#08110f; color:var(--fg); }
+    .row { display:flex; gap:8px; }
+    .row > * { flex:1; }
+    .actions { display:flex; gap:8px; margin-top:16px; }
+    button { flex:1; padding:9px; border:0; border-radius:6px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+    button.secondary { background:#26433d; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .status { margin-top:12px; font-size:12px; color:var(--muted); }
+    h2 { font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:0 0 10px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--muted); position:sticky; top:0; background:var(--panel); }
+    td.type { font-weight:600; color:var(--ok); white-space:nowrap; }
+    td.val { font-family:ui-monospace, monospace; word-break:break-all; }
+    .tablewrap { max-height:46vh; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+    #log { background:#070d0c; border:1px solid var(--line); border-radius:8px; padding:10px; height:150px; overflow:auto; font-family:ui-monospace, monospace; font-size:12px; white-space:pre-wrap; margin-top:12px; }
+    .log-err { color:var(--err); } .log-ok { color:var(--ok); }
+    .summary { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+    .chip { background:#08110f; border:1px solid var(--line); border-radius:6px; padding:3px 8px; font-size:12px; }
+    .count { font-size:12px; color:var(--muted); margin:10px 0; }
+    .downloads { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+    .hide { display:none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SOAPHound <span style="opacity:.6">· Isolated Web App</span></h1>
+    <p>Collects Active Directory data over ADWS (TCP 9389) via the Direct Sockets API. For authorised security testing only.</p>
+  </header>
+  <main>
+    <section class="panel" id="form">
+      <h2>Target</h2>
+      <label>Domain Controller (host / IP)</label>
+      <input id="host" type="text" placeholder="dc01.corp.local" autocomplete="off">
+      <div class="row">
+        <div>
+          <label>ADWS port</label>
+          <input id="port" type="number" value="9389">
+        </div>
+        <div>
+          <label>SOAP FQDN (optional)</label>
+          <input id="fqdn" type="text" placeholder="defaults to host" autocomplete="off">
+        </div>
+      </div>
+
+      <h2 style="margin-top:16px">Credentials (NTLMv2)</h2>
+      <label>Username (user@domain or DOMAIN\user)</label>
+      <input id="user" type="text" placeholder="user@corp.local" autocomplete="off">
+      <label>Domain (optional — overrides parsed)</label>
+      <input id="domain" type="text" placeholder="corp.local" autocomplete="off">
+      <label>Password</label>
+      <input id="password" type="password" autocomplete="off">
+
+      <h2 style="margin-top:16px">Collection</h2>
+      <label>Mode</label>
+      <select id="mode">
+        <option value="buildcache">Build cache (SID/DN/type)</option>
+        <option value="bhdump">BloodHound dump (CE JSON)</option>
+        <option value="certdump">ADCS dump (certificates)</option>
+        <option value="dnsdump">ADIDNS dump</option>
+        <option value="query">Custom LDAP query</option>
+      </select>
+      <label>Base / domain DN (optional — auto from domain)</label>
+      <input id="basedn" type="text" placeholder="DC=corp,DC=local" autocomplete="off">
+      <div id="query-opts" class="hide">
+        <label>LDAP filter</label>
+        <input id="filter" type="text" value="(objectClass=*)" autocomplete="off">
+        <label>Attributes (comma-separated)</label>
+        <input id="attributes" type="text" value="distinguishedName,objectClass,sAMAccountName,objectSid" autocomplete="off">
+      </div>
+
+      <div class="actions">
+        <button id="btn-run">Run</button>
+        <button id="btn-clear" class="secondary">Clear</button>
+      </div>
+      <div class="status" id="status">Initialising…</div>
+    </section>
+
+    <section class="panel" id="results">
+      <h2>Results</h2>
+      <div class="summary" id="summary"></div>
+      <div class="downloads" id="downloads"></div>
+      <div class="count" id="count"></div>
+      <div class="tablewrap"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
+      <div id="log"></div>
+    </section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

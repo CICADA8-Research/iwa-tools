@@ -1,0 +1,4 @@
+node_modules/
+dist/
+signing.key
+public/icons/

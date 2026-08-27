@@ -1,0 +1,26 @@
+{
+  "name": "iwa-tools-console",
+  "version": "0.0.2",
+  "description": "An Isolated Web App: a unified pseudo-console bundling all the Direct Sockets utilities (adidns, soaphound, sharphound, evil-winrm, ldap-shell, portscan).",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "keygen": "node scripts/gen-key.js",
+    "assets": "node scripts/gen-assets.js",
+    "prebuild": "node scripts/gen-assets.js",
+    "build": "rollup -c",
+    "test": "node scripts/test.js",
+    "id": "node scripts/print-id.js",
+    "manifest": "node scripts/gen-update-manifest.js"
+  },
+  "devDependencies": {
+    "rollup": "^3.29.5",
+    "rollup-plugin-webbundle": "0.2.0",
+    "wbn-sign": "0.3.1"
+  },
+  "dependencies": {
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "crypto-js": "^4.2.0"
+  }
+}

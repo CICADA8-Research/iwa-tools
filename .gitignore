@@ -1,0 +1,74 @@
+# ---- Dependencies -----------------------------------------------------------
+node_modules/
+**/node_modules/
+
+# ---- Build output -----------------------------------------------------------
+dist/
+**/dist/
+build/
+tls-wasm/target/
+
+# ---- IWA signing keys -------------------------------------------------------
+# Per-tool Ed25519 private key that signs the Web Bundle. If leaked, someone
+# else can publish updates as YOU. Regenerated locally via `npm run keygen`.
+signing.key
+**/signing.key
+
+# ---- Generated bundle output (defense in depth alongside dist/) -------------
+*.swbn
+**/public/icons/
+
+# ---- Secrets / creds / test artifacts ---------------------------------------
+# These formats never belong in a public repo.
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+*.jks
+*.ccache
+*.kirbi
+*.env
+.env
+.env.*
+.npmrc
+
+# ---- Loot / lab output ------------------------------------------------------
+loot/
+**/loot/
+*.ntds.dit
+*.SYSTEM
+
+# ---- Deploy-specific / not part of the toolset ------------------------------
+landing/
+presentation/
+qr-code.html
+
+# ---- Dev-only notes / editor / OS -------------------------------------------
+backlog.md
+.claude/
+.aider*
+.cursor/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ---- Random binaries / documents at the repo root ---------------------------
+*.exe
+*.dll
+*.so
+*.dylib
+*.zip
+*.tar.gz
+*.pdf
+
+# ---- Logs -------------------------------------------------------------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

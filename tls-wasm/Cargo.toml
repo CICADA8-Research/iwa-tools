@@ -1,0 +1,23 @@
+[package]
+name = "tls_wasm"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# rustls without its default ring/aws-lc provider — we supply a pure-Rust one
+# (rustls-rustcrypto) so it compiles to wasm32-unknown-unknown.
+rustls = { version = "0.23", default-features = false, features = ["tls12", "std"] }
+rustls-rustcrypto = "=0.0.2-alpha"
+# `web` makes pki-types' time source use web-time (JS clock) on wasm; `std`
+# keeps it building off-wasm too.
+rustls-pki-types = { version = "1", features = ["std", "web"] }
+# `js` routes randomness through the browser Web Crypto API.
+getrandom = { version = "0.2", features = ["js"] }
+wasm-bindgen = "0.2"
+
+[profile.release]
+opt-level = "z"
+lto = true

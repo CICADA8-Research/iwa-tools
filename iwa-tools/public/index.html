@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="/.well-known/manifest.webmanifest">
+  <title>iwa-tools console</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0a0f1a; --line:#26344f; --fg:#dbe6f5; --muted:#8aa0c2; --ok:#34d399; --err:#f87171; --warn:#fbbf24; --cmd:#7cc4ff; --panel:#0d1424; --accent:#1e3a5f; }
+    * { box-sizing: border-box; }
+    html, body { height:100%; margin:0; }
+    body { display:flex; flex-direction:column; font:13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background:var(--bg); color:var(--fg); }
+    header { padding:10px 16px; background:#0d1b33; border-bottom:1px solid var(--line); }
+    header b { font-size:14px; } header span { color:var(--muted); font-size:12px; }
+
+    /* tab bar */
+    #tabs { display:flex; gap:2px; padding:0 12px; background:#0b1526; border-bottom:1px solid var(--line); }
+    #tabs button { background:transparent; border:0; border-bottom:2px solid transparent; color:var(--muted); font:inherit; padding:9px 14px; cursor:pointer; }
+    #tabs button:hover { color:var(--fg); }
+    #tabs button.active { color:var(--cmd); border-bottom-color:var(--cmd); }
+    #tabs .badge { margin-left:6px; color:var(--muted); font-size:11px; }
+
+    main { flex:1; display:flex; min-height:0; }
+    .view { flex:1; display:flex; flex-direction:column; min-height:0; }
+    .view[hidden] { display:none; }
+
+    /* console */
+    #term { flex:1; overflow:auto; padding:12px 16px; white-space:pre-wrap; }
+    #term .ok { color:var(--ok); } #term .err { color:var(--err); } #term .warn { color:var(--warn); } #term .cmd { color:var(--cmd); } #term .muted { color:var(--muted); }
+    .promptline { display:flex; gap:8px; align-items:center; padding:10px 16px; border-top:1px solid var(--line); background:var(--panel); }
+    #ps { color:var(--ok); white-space:nowrap; }
+    #cmd { flex:1; background:transparent; border:0; outline:0; color:var(--fg); font:inherit; }
+
+    /* files */
+    .files-toolbar { display:flex; gap:8px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--line); background:var(--panel); flex-wrap:wrap; }
+    .files-toolbar input { background:#0a1220; border:1px solid var(--line); color:var(--fg); font:inherit; padding:5px 8px; border-radius:4px; }
+    .files-toolbar #upload-dir { width:150px; }
+    .btn { background:var(--accent); border:1px solid var(--line); color:var(--fg); font:inherit; padding:5px 12px; border-radius:4px; cursor:pointer; }
+    .btn:hover { background:#274b78; }
+    .btn.danger:hover { background:#5b2130; }
+    .files-toolbar .spacer { flex:1; }
+    .files-toolbar .muted { color:var(--muted); font-size:12px; }
+    #filewrap { flex:1; overflow:auto; padding:8px 8px 40px; position:relative; }
+    #filewrap.drag { outline:2px dashed var(--cmd); outline-offset:-8px; background:#0c1830; }
+    table#filelist { width:100%; border-collapse:collapse; }
+    #filelist th { text-align:left; color:var(--muted); font-weight:normal; font-size:11px; text-transform:uppercase; letter-spacing:.04em; padding:6px 10px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); }
+    #filelist td { padding:6px 10px; border-bottom:1px solid #182338; vertical-align:middle; }
+    #filelist tr:hover td { background:#0e1830; }
+    #filelist .path { color:var(--fg); word-break:break-all; }
+    #filelist .path .tag { display:inline-block; margin-left:6px; padding:1px 7px; border:1px solid var(--line); border-radius:10px; color:var(--warn); font-size:11px; white-space:nowrap; }
+    #filelist .num { color:var(--muted); white-space:nowrap; text-align:right; }
+    #filelist .age { color:var(--muted); white-space:nowrap; }
+    #filelist .actions { white-space:nowrap; text-align:right; }
+    #filelist .actions .btn { padding:3px 9px; margin-left:6px; }
+    #files-empty { color:var(--muted); padding:24px 12px; text-align:center; }
+    #files-empty b { color:var(--fg); }
+  </style>
+</head>
+<body>
+  <header><b>iwa-tools</b> <span>· authorised testing only</span></header>
+  <nav id="tabs">
+    <button data-tab="console" class="active">Console</button>
+    <button data-tab="files">Files<span class="badge" id="files-count"></span></button>
+  </nav>
+  <main>
+    <section id="view-console" class="view" data-view="console">
+      <div id="term"></div>
+      <div class="promptline"><span id="ps">iwa#</span><input id="cmd" type="text" autocomplete="off" spellcheck="false" autofocus></div>
+    </section>
+    <section id="view-files" class="view" data-view="files" hidden>
+      <div class="files-toolbar">
+        <button class="btn" id="btn-upload">⬆ Upload…</button>
+        <input id="upload-dir" type="text" placeholder="folder/ (optional)" spellcheck="false" autocomplete="off">
+        <span class="spacer"></span>
+        <span class="muted">drag &amp; drop files anywhere below</span>
+      </div>
+      <div id="filewrap">
+        <table id="filelist">
+          <thead><tr><th>Path</th><th class="num">Size</th><th class="age">Modified</th><th class="actions">Actions</th></tr></thead>
+          <tbody id="filerows"></tbody>
+        </table>
+        <div id="files-empty" hidden>No files yet. <b>Upload</b> a file, or store tool results (they land under <b>loot/</b>).</div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="/.well-known/manifest.webmanifest">
+  <title>ADIDNSDump (IWA)</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0e1726; --panel:#16223a; --line:#26344f; --fg:#dbe6f5; --muted:#8aa0c2; --accent:#3b82f6; --ok:#34d399; --warn:#fbbf24; --err:#f87171; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:14px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+    header { padding:16px 20px; background:#124a8c; }
+    header h1 { margin:0; font-size:18px; }
+    header p { margin:4px 0 0; font-size:12px; color:#cfe0f7; }
+    main { display:grid; grid-template-columns:340px 1fr; gap:16px; padding:16px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; }
+    label { display:block; font-size:12px; color:var(--muted); margin:10px 0 3px; }
+    input[type=text], input[type=password], input[type=number], select { width:100%; padding:8px; border-radius:6px; border:1px solid var(--line); background:#0c1322; color:var(--fg); }
+    .row { display:flex; gap:8px; }
+    .row > * { flex:1; }
+    .check { display:flex; align-items:center; gap:8px; margin-top:10px; font-size:13px; color:var(--fg); }
+    .check input { width:auto; }
+    .actions { display:flex; gap:8px; margin-top:16px; }
+    button { flex:1; padding:9px; border:0; border-radius:6px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+    button.secondary { background:#33415c; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .status { margin-top:12px; font-size:12px; color:var(--muted); }
+    h2 { font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:0 0 10px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--muted); position:sticky; top:0; background:var(--panel); }
+    td.type { font-weight:600; color:var(--ok); white-space:nowrap; }
+    td.val { font-family:ui-monospace, monospace; word-break:break-all; }
+    tr.tomb td { opacity:.55; }
+    .tablewrap { max-height:48vh; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+    #log { background:#0a1020; border:1px solid var(--line); border-radius:8px; padding:10px; height:160px; overflow:auto; font-family:ui-monospace, monospace; font-size:12px; white-space:pre-wrap; margin-top:12px; }
+    .log-err { color:var(--err); } .log-ok { color:var(--ok); }
+    .zones { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .zone { background:#0c1322; border:1px solid var(--line); border-radius:6px; padding:3px 8px; font-size:12px; cursor:pointer; }
+    .warn { background:#3a2a0c; border:1px solid #6b4e16; color:#f4d089; padding:8px 10px; border-radius:8px; font-size:12px; margin-top:12px; }
+    .count { font-size:12px; color:var(--muted); margin:10px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ADIDNSDump <span style="opacity:.6">· Isolated Web App</span></h1>
+    <p>Dumps Active Directory Integrated DNS over LDAP via the Direct Sockets API. For authorised security testing only.</p>
+  </header>
+  <main>
+    <section class="panel" id="form">
+      <h2>Target</h2>
+      <label>Domain Controller (host / IP)</label>
+      <input id="host" type="text" placeholder="dc01.corp.local" autocomplete="off">
+      <div class="row">
+        <div>
+          <label>LDAP port</label>
+          <input id="port" type="number" value="389">
+        </div>
+        <div>
+          <label>Page size</label>
+          <input id="pagesize" type="number" value="1000">
+        </div>
+      </div>
+      <div class="check"><input id="tls" type="checkbox"><label style="margin:0">Use TLS (LDAPS) — WASM rustls + channel binding</label></div>
+
+      <h2 style="margin-top:16px">Credentials</h2>
+      <label>Authentication</label>
+      <select id="auth">
+        <option value="ntlm">NTLMv2 (GSS-SPNEGO)</option>
+        <option value="kerberos">Kerberos (GSS-SPNEGO)</option>
+        <option value="simple">Simple bind (cleartext)</option>
+      </select>
+      <label id="bind-label">Username (user@domain or DOMAIN\user)</label>
+      <input id="bind" type="text" placeholder="user@corp.local" autocomplete="off">
+      <label id="domain-row">Domain / realm (optional — overrides the parsed domain)</label>
+      <input id="domain" type="text" placeholder="CORP" autocomplete="off">
+      <label id="kdc-row">KDC (optional — defaults to the DC host above)</label>
+      <input id="kdc" type="text" placeholder="dc01.corp.local" autocomplete="off">
+      <label>Password</label>
+      <input id="password" type="password" autocomplete="off">
+
+      <h2 style="margin-top:16px">Scope</h2>
+      <label>Base / domain DN (optional — auto from RootDSE)</label>
+      <input id="basedn" type="text" placeholder="DC=corp,DC=local" autocomplete="off">
+      <label>Zone (optional — blank dumps all)</label>
+      <input id="zone" type="text" placeholder="corp.local" autocomplete="off">
+
+      <div class="check"><input id="forest" type="checkbox"><label style="margin:0">ForestDnsZones partition</label></div>
+      <div class="check"><input id="tomb" type="checkbox"><label style="margin:0">Include tombstoned</label></div>
+      <div class="check"><input id="resolve" type="checkbox"><label style="margin:0">Resolve hidden records (UDP/53)</label></div>
+
+      <div class="actions">
+        <button id="btn-zones" class="secondary">List zones</button>
+        <button id="btn-dump">Dump records</button>
+      </div>
+      <div class="status" id="status">Idle.</div>
+      <div class="warn">TCPSocket has no TLS, so this is LDAP/389. <b>NTLMv2</b> does not send the password, but the bind is unsigned/unsealed — it fails against DCs that require LDAP channel binding. <b>Kerberos</b> needs the DC host to be the FQDN matching its <code>ldap/</code> SPN, the realm set, and the clock within ~5 min of the DC (the client auto-corrects from the KDC's time). <b>Simple bind</b> sends the password in cleartext. Authorised testing only.</div>
+    </section>
+
+    <section class="panel" id="results">
+      <h2>Results</h2>
+      <div class="zones" id="zones"></div>
+      <div class="count" id="count"></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Name</th><th>Type</th><th>TTL</th><th>Value</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="actions" style="margin-top:10px">
+        <button id="btn-csv" class="secondary" disabled>Export CSV</button>
+        <button id="btn-clear" class="secondary">Clear</button>
+      </div>
+      <div id="log"></div>
+    </section>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
