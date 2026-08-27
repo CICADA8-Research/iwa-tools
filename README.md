@@ -1,5 +1,11 @@
 # iwa-tools
+## TL;DR
+Check out the demo on this [site](https://iwa-tools.pkilla.pw/)!
 
+<img width="1240" height="1276" alt="изображение" src="https://github.com/user-attachments/assets/3c3ed271-c775-4330-b5e5-750825938e99" />
+
+
+## Description
 Chrome has an experimental API called Direct Sockets that gives raw TCP/UDP to
 "Isolated Web Apps" — signed, installed web apps that live under
 `isolated-app://<key>/`. It exists so people can build things like SSH clients
